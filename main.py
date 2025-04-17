@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 import time
 import smtplib
 import schedule
+import os
 
 
 
@@ -21,12 +22,13 @@ options.add_argument("--disable-extensions")
 options.add_experimental_option("excludeSwitches", ["enable-automation"])
 options.add_experimental_option('useAutomationExtension', False)
 
-chromedriver_path = "/Users/laraturunc/Documents/zara-bot/chromedriver"
+chromedriver_path = "enter_your_chromedriver_path" #install chrome driver and add its path here.
 
 
-sender_email = "laraturunc2103@gmail.com"
-app_password = "qaejnurybzslspyr"
-receiver_email = "laraturunc2103@gmail.com"
+sender_email = os.getenv("EMAIL")
+app_password = os.getenv("APP_PASSWORD") 
+receiver_email = os.getenv("RECEIVER")
+
 
 last_notified_sizes = set()
 
@@ -34,7 +36,7 @@ from email.message import EmailMessage
 
 def send_email():
     subject = "🎉 Zara Stoğa Girdi!"
-    body = "XS veya S beden stoğa girdi! Hemen bak: https://www.zara.com/tr/tr/-k-e-m-e-r-l-i----y-e-l-e-k---t-o-p--p02010812.html"
+    body = "XS veya S beden stoğa girdi! Hemen bak: <insert zara product link>"
 
     msg = EmailMessage()
     msg["Subject"] = subject
@@ -56,7 +58,7 @@ def check_stock():
     service = Service(executable_path=chromedriver_path)
     driver = webdriver.Chrome(service=service, options=options)
 
-    url = "https://www.zara.com/tr/tr/-k-e-m-e-r-l-i----y-e-l-e-k---t-o-p--p02010812.html?v1=417748060"
+    url = "insert zara product link here" #insert url of the product
     driver.get(url)
     driver.implicitly_wait(10)
     time.sleep(10)
@@ -83,7 +85,7 @@ def check_stock():
         data_status = button.get_attribute("data-qa-action")
         print(f"👉 {text} | stock status: {data_status}")
 
-        if text in ["XS", "S", "XL"] and data_status == "size-in-stock":
+        if text in ["XS", "S"] and data_status == "size-in-stock":
             current_stock.add(text)
             if text not in last_notified_sizes:
                 send_email()
@@ -93,7 +95,7 @@ def check_stock():
                 print(f"⚠️ {text} zaten bildirildi, tekrar gönderilmiyor.")
 
     if not notified_this_round:
-        print("❌ XS/S/XL stokta yok.")
+        print("❌ XS/S stokta yok.")
         last_notified_sizes = last_notified_sizes.intersection(current_stock)
 
     driver.quit()
@@ -104,8 +106,8 @@ check_stock()
 
 
 schedule.every(1).minutes.do(check_stock)
-print("🔁 Zara stoğu takip ediliyor... (her 1 dakikada bir)")
+print("🔁 Zara stoğu takip ediliyor... (her 5 dakikada bir)")
 
 while True:
     schedule.run_pending()
-    time.sleep(1)
+    time.sleep(5)
